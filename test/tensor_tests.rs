@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use neura::core::tensor::Tensor;
-    use ndarray::{IxDyn, Dimension};
+    use neura::core::tensor::{self, Tensor};
+    use ndarray::{Dimension, IxDyn, Shape, s};
 
     #[test]
     fn test_tensor_creation() {
@@ -43,5 +43,30 @@ mod tests {
         println!("{:?}", tensor.data);
 
         assert_eq!(tensor.data.shape(), shape);
+    }
+
+    #[test]
+    fn test_tensor_get_item() {
+        let shape = vec![1, 2, 2];
+        let tensor: Tensor = Tensor::ones(&shape, false);
+
+        assert_eq!(tensor.data[[0,1,1]], 1.0);
+    }
+
+    #[test]
+    fn test_tensor_set_item() {
+        let shape = vec![1, 2, 2];
+        let mut tensor: Tensor = Tensor::ones(&shape, false);
+        tensor.data[[0, 1, 1]] = 10.0;
+
+        assert_eq!(tensor.data[[0, 1, 1]], 10.0);
+    }
+
+    #[test]
+    fn test_tensor_get_slice() {
+        let shape = vec![1,2,3];
+        let tensor: Tensor = Tensor::ones(&shape, false);
+
+        println!("{:?}", tensor.data.slice(s![0, 0, 0..2]));
     }
 }
