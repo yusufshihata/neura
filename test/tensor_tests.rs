@@ -6,7 +6,7 @@ mod tests {
     #[test]
     fn test_tensor_creation() {
         let shape = vec![3, 4, 5]; 
-        let tensor: Tensor<f32> = Tensor::new(&shape, false);
+        let tensor: Tensor = Tensor::new(&shape, false);
 
         // Check basic properties
         assert_eq!(tensor.ndim, 3);
@@ -19,17 +19,29 @@ mod tests {
     #[test]
     fn test_tensor_requires_grad() {
         let shape = vec![2, 2];
-        let tensor: Tensor<f32> = Tensor::new(&shape, true);
+        let tensor: Tensor = Tensor::new(&shape, true);
 
         assert!(tensor.requires_grad);
         assert!(tensor.grad.is_some());
     }
 
     #[test]
-    fn test_tensor_data_shape() {
+    fn test_tensor_zeros() {
         let shape = vec![2, 3, 4];
-        let tensor: Tensor<f32> = Tensor::new(&shape, false);
+        let tensor: Tensor = Tensor::zeros(&shape, false);
 
-        assert_eq!(tensor.data.shape(), IxDyn(&shape).as_array_view().shape());
+        println!("{:?}", tensor.data);
+
+        assert_eq!(tensor.data.shape(), shape);
+    }
+
+    #[test]
+    fn test_tensor_ones() {
+        let shape = vec![2, 3, 4];
+        let tensor: Tensor = Tensor::ones(&shape, false);
+
+        println!("{:?}", tensor.data);
+
+        assert_eq!(tensor.data.shape(), shape);
     }
 }
