@@ -12,13 +12,12 @@ pub struct Tensor {
 }
 
 impl Tensor {
-    pub fn new(shape: &[usize], requires_grad: bool) -> Self {
+    pub fn new(data: ArrayD<f64>, shape: Vec<usize>, requires_grad: bool) -> Self {
         let size: i32 = shape.iter().product::<usize>() as i32;
         let ndim: usize = shape.len();
-        let data: ArrayD<f64> = ArrayD::<f64>::default(IxDyn(shape));
 
         let grad = if requires_grad {
-            Some(ArrayD::<f64>::default(IxDyn(shape)))
+            Some(ArrayD::<f64>::default(IxDyn(&shape)))
         } else {
             None
         };
@@ -26,11 +25,11 @@ impl Tensor {
         Tensor {
             size,
             ndim,
-            shape: shape.to_vec(),
+            shape,
             data,
             offset: 0,
-            requires_grad,
-            grad,
+            requires_grad: false,
+            grad: grad,
         }
     }
 

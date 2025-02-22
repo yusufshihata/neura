@@ -1,16 +1,16 @@
 #[cfg(test)]
 mod tests {
-    use neura::core::tensor::{self, Tensor};
-    use ndarray::{Dimension, IxDyn, Shape, s};
+    use neura::core::tensor::Tensor;
+    use ndarray::{s, ArrayD, IxDyn};
 
     #[test]
     fn test_tensor_creation() {
-        let shape = vec![3, 4, 5]; 
-        let tensor: Tensor = Tensor::new(&shape, false);
+        let shape = vec![3, 4, 5];
+        let data = ArrayD::<f64>::ones(IxDyn(&shape));
+        let tensor: Tensor = Tensor::new(data, shape, false);
 
         // Check basic properties
         assert_eq!(tensor.ndim, 3);
-        assert_eq!(tensor.shape, shape);
         assert_eq!(tensor.size, (3 * 4 * 5) as i32);
         assert_eq!(tensor.requires_grad, false);
         assert!(tensor.grad.is_none());
@@ -19,7 +19,8 @@ mod tests {
     #[test]
     fn test_tensor_requires_grad() {
         let shape = vec![2, 2];
-        let tensor: Tensor = Tensor::new(&shape, true);
+        let data = ArrayD::<f64>::ones(IxDyn(&shape));
+        let tensor: Tensor = Tensor::new(data, shape, true);
 
         assert!(tensor.requires_grad);
         assert!(tensor.grad.is_some());

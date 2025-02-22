@@ -12,3 +12,8 @@ ndarray = "0.15"
 name = "tensor_tests"
 path = "test/tensor_tests.rs"
 harness = true
+
+[[test]]
+name = "ops_tests"
+path = "test/ops_tests.rs"
+harness = true
