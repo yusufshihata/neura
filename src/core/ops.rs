@@ -1,5 +1,5 @@
 use crate::core::tensor::Tensor;
-use std::ops::{Add, Mul, MulAssign};
+use std::ops::{Add, Sub, Mul};
 
 impl Add for Tensor {
     type Output = Tensor;
@@ -7,6 +7,15 @@ impl Add for Tensor {
     fn add(self, rhs: Self) -> Self::Output {
         assert!(self.shape == rhs.shape);
         let data = self.data + rhs.data;
+        Tensor::new(data, self.shape.clone(), self.requires_grad)
+    }
+}
+
+impl Sub for Tensor {
+    type Output = Tensor;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let data = self.data - rhs.data;
         Tensor::new(data, self.shape.clone(), self.requires_grad)
     }
 }

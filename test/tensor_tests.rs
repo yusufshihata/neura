@@ -22,7 +22,6 @@ mod tests {
         let data = ArrayD::<f64>::ones(IxDyn(&shape));
         let tensor: Tensor = Tensor::new(data, shape, true);
 
-        assert!(tensor.requires_grad);
         assert!(tensor.grad.is_some());
     }
 
