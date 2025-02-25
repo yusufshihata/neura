@@ -1,4 +1,5 @@
 use crate::core::tensor::Tensor;
+use ndarray::{ArrayD, IxDyn, Ix2};
 use std::ops::{Add, Sub, Mul};
 use rayon::prelude::*;
 
@@ -31,22 +32,40 @@ impl Mul<f64> for Tensor {
 }
 
 impl Tensor {
-    fn matmul(&self, other: &Tensor) -> Tensor {
-        assert!(self.shape.len() >= 2 && other.shape.len() >= 2, "Tensors must have at least 2 dimensions for matrix multiplication.");
+    pub fn matmul(&self, other: &Tensor) -> Tensor {
+        // Ensure tensors are at least 2D
+        assert!(self.rank >= 2 && other.rank >= 2, "Tensors must be at least 2D for matmul");
 
-        let (m, k1) = (self.shape[self.shape.len() - 2], self.shape[self.shape.len() - 1]);
-        let (k2, n) = (other.shape[other.shape.len() - 2], other.shape[other.shape.len() - 1]);
+        // Extract dimensions for matrix multiplication
+        let (m, k1) = (self.shape[self.rank - 2], self.shape[self.rank - 1]);
+        let (k2, n) = (other.shape[other.rank - 2], other.shape[other.rank - 1]);
+        assert!(k1 == k2, "Shape mismatch: {:?} @ {:?} is invalid", self.shape, other.shape);
 
-        assert!(k1 == k2, "Inner dimensions must match for matrix multiplication.");
+        // Convert to 2D arrays for dot product
+        let self_matrix = self.data.clone().into_dimensionality::<Ix2>().unwrap();
+        let other_matrix = other.data.clone().into_dimensionality::<Ix2>().unwrap();
 
-        let mut result = vec![0.0; m*n];
-        result.par_chunk_mut(n).enumerate().for_each(|(i, chunk)| {
-            for j in 0..n {
-                for k in 0..k1 {
-                    chunk[j] += self.data[[i, k]] * other.data[[k, j]];
-                }
-            }
-        });
-        Tensor::ones(&self.shape, true)
+        // Perform matrix multiplication
+        let result_data = self_matrix.dot(&other_matrix);
+
+        // Convert back to dynamic dimensions
+        let new_shape = vec![m, n];
+        let result_data = result_data.into_dyn();
+
+        // Initialize gradient if needed
+        let mut result_grad = None;
+        if self.requires_grad || other.requires_grad {
+            result_grad = Some(ArrayD::<f64>::zeros(IxDyn(&new_shape)));
+        }
+
+        Tensor {
+            size: (m * n) as i32,
+            rank: new_shape.len(),
+            shape: new_shape,
+            data: result_data,
+            offset: 0,
+            requires_grad: self.requires_grad || other.requires_grad,
+            grad: result_grad,
+        }
     }
 }

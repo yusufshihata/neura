@@ -10,7 +10,7 @@ mod tests {
         let tensor: Tensor = Tensor::new(data, shape, false);
 
         // Check basic properties
-        assert_eq!(tensor.ndim, 3);
+        assert_eq!(tensor.rank, 3);
         assert_eq!(tensor.size, (3 * 4 * 5) as i32);
         assert_eq!(tensor.requires_grad, false);
         assert!(tensor.grad.is_none());
