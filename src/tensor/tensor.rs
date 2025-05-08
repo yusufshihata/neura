@@ -54,6 +54,43 @@ impl<'a> Tensor {
         }
     }
 
+    
+    pub fn ones(shape: Vec<usize>, requires_grad: Option<bool>) -> Self {
+        let grad = match requires_grad {
+            Some(requires_grad) => requires_grad,
+            None => false,
+        };
+
+        let dims = shape.len();
+
+        let mut size = 1;
+
+        for dim in &shape {
+            size *= dim;
+        }
+
+        let mut strides = vec![];
+
+        for i in 0..dims {
+            let mut stride = 1;
+            
+            for j in i+1..dims {
+                stride *= shape[j];
+            }
+            
+            strides.push(stride);
+        }
+
+        Tensor {
+            dims: dims,
+            shape: shape,
+            size: size,
+            data: vec![1.0; size],
+            strides: strides,
+            requires_grad: grad,
+        }
+    }
+
     pub fn size(&'a self) -> &'a usize {
         &self.size
     }
