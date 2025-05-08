@@ -1,3 +1,4 @@
+use std::io::Error;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq)]
@@ -8,6 +9,7 @@ pub enum TensorErrors {
     OutOfBound,
 }
 
+#[warn(dead_code)]
 pub struct Tensor {
     dims: usize,
     shape: Vec<usize>,
@@ -75,11 +77,11 @@ impl<'a> Tensor {
         let mut idx = 0;
 
         for i in 0..*n {
-            if index[i] >= self.shape[i] {
+            if index[i] >= self.shape[i] || index[i] < 0 {
                 return Err(TensorErrors::OutOfBound);
             }
 
-            idx += index[i] * self.strides[i];
+            idx += self.index[i] * self.strides[i];
         }
         
         Ok(self.data[idx])
@@ -88,10 +90,6 @@ impl<'a> Tensor {
         for i in 0..(*self.size() as i32) {
             println!("{} ", self.data[i as usize]);
         }
-    }
-
-    pub fn requires_grad(&'a self) -> &'a bool {
-        &self.requires_grad
     }
 }
 
