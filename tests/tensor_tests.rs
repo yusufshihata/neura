@@ -14,6 +14,15 @@ mod tests {
         assert_eq!(*tensor.strides(), vec![3 as usize, 1 as usize]);
     }
 
+    #[test]
+    fn test_ones() {
+        let tensor = Tensor::ones(vec![2,3], Some(false));
+
+        assert_eq!(*tensor.size(), 6 as usize);
+        assert_eq!(*tensor.view(), vec![2 as usize, 3 as usize]);
+        assert_eq!(*tensor.strides(), vec![3 as usize, 1 as usize]);
+    }
+
    #[test]
     fn test_get_miss_matched_shape() {
         let tensor = Tensor::zeros(vec![3, 4, 2], None);
