@@ -126,5 +126,7 @@ impl<'a> Tensor {
         
         Ok(self.data[idx])
     }
+
+    pub fn slice(&'a self, ranges: Vec<std::ops::Range<usize>>) -> Result<Tensor, TensorErrors> {}
 }
 
