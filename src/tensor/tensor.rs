@@ -90,24 +90,36 @@ impl Tensor {
         }
         Ok(self.data[idx])
     }
-
     pub fn slice(&self, ranges: Vec<std::ops::Range<usize>>) -> Result<Tensor, TensorErrors> {
+
         if ranges.len() != self.dims {
-            return Err(TensorErrors::InvalidShape);
-        }
+                return Err(TensorErrors::InvalidShape);
+            }
 
         let mut new_shape = Vec::with_capacity(self.dims);
         for (i, range) in ranges.iter().enumerate() {
-            if range.start >= self.shape[i] || range.end > self.shape[i] || range.start > range.end {
+            // Corrected the range check here: changed >= to >
+            if range.start > self.shape[i] || range.end > self.shape[i] || range.start > range.end {
                 return Err(TensorErrors::InvalidRange);
             }
             new_shape.push(range.end - range.start);
         }
-
+        
         let new_size = new_shape.iter().product();
         let new_strides = Self::compute_strides(&new_shape);
-        let mut new_data = vec![0.0; new_size];
 
+        if new_size == 0 {
+            return Ok(Tensor {
+                dims: self.dims,
+                shape: new_shape,
+                size: 0,
+                data: Vec::new(),
+                strides: new_strides,
+                requires_grad: self.requires_grad,
+            });
+        }
+
+        let mut new_data = vec![0.0; new_size];
         let mut indices = vec![0; self.dims];
         let mut pos = 0;
         loop {
