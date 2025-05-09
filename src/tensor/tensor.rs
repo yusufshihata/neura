@@ -90,6 +90,7 @@ impl Tensor {
         }
         Ok(self.data[idx])
     }
+    
     pub fn slice(&self, ranges: Vec<std::ops::Range<usize>>) -> Result<Tensor, TensorErrors> {
 
         if ranges.len() != self.dims {
