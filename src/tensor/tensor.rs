@@ -103,6 +103,11 @@ impl<'a> Tensor {
         &self.strides
     }
 
+    
+    pub fn requires_grad(&'a self) -> &'a bool {
+        &self.requires_grad
+    }
+
     pub fn get(&'a self, index: Vec<usize>) -> Result<f32, TensorErrors> {
         let n = &index.len();
         if *n != self.dims {
@@ -120,15 +125,6 @@ impl<'a> Tensor {
         }
         
         Ok(self.data[idx])
-    }
-    pub fn data(&'a self) {
-        for i in 0..(*self.size() as i32) {
-            println!("{} ", self.data[i as usize]);
-        }
-    }
-
-    pub fn requires_grad(&'a self) -> &'a bool {
-        &self.requires_grad
     }
 }
 
