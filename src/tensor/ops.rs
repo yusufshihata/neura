@@ -1,31 +1,68 @@
-use neura::tensor::tensor::{ Tensor, TensorErrors };
-use std::ops;
+use std::ops::{Add, Sub, AddAssign, SubAssign};
+use crate::tensor::tensor::{Tensor, TensorErrors};
 
-impl ops::Add<Tensor> for Tensor {
-    pub fn add(&self, other: &Tensor) -> Result<Tensor, TensorErrors> {
-        if &self.shape() != other.shape() {
+impl Add for Tensor {
+    type Output = Result<Tensor, TensorErrors>;
+
+    fn add(self, other: Tensor) -> Self::Output {
+        if self.shape != other.shape {
             return Err(TensorErrors::MissMatchedShapes);
         }
-
-        let mut new_tensor: Tensor = self.clone();
-        for i in 0..&self.size() {
-            new_tensor.data[i] += *other.data[i];
-        }
-
-        Ok(new_tensor)
+        let data = self.data.iter().zip(other.data.iter()).map(|(&a, &b)| a + b).collect();
+        let requires_grad = self.requires_grad || other.requires_grad;
+        Ok(Tensor {
+            dims: self.dims,
+            shape: self.shape.clone(),
+            size: self.size,
+            data,
+            strides: self.strides.clone(),
+            requires_grad,
+        })
     }
 }
 
-impl ops::Sub<Tensor> for Tensor {
-    pub fn add(&self, other: &Tensor) -> Result<Tensor, TensorErrors> {
-        if &self.shape() != other.shape() {
+impl Sub for Tensor {
+    type Output = Result<Tensor, TensorErrors>;
+
+    fn sub(self, other: Tensor) -> Self::Output {
+        if self.shape != other.shape {
             return Err(TensorErrors::MissMatchedShapes);
         }
-
-        let mut new_tensor: Tensor = self.clone();
-        for i in 0..&self.size() {
-            new_tensor.data[i] -= *other.data[i];
-        }
+        let data = self.data.iter().zip(other.data.iter()).map(|(&a, &b)| a - b).collect();
+        let requires_grad = self.requires_grad || other.requires_grad;
+        Ok(Tensor {
+            dims: self.dims,
+            shape: self.shape.clone(),
+            size: self.size,
+            data,
+            strides: self.strides.clone(),
+            requires_grad,
+        })
     }
 }
 
+impl AddAssign for Tensor {
+    fn add_assign(&mut self, other: Tensor) {
+        if self.shape != other.shape {
+            panic!("MissMatchedShapes: Cannot add_assign tensors with different shapes");
+        }
+
+        for (a, b) in self.data.iter_mut().zip(other.data.iter()) {
+            *a += b;
+        }
+        self.requires_grad |= other.requires_grad;
+    }
+}
+
+impl SubAssign for Tensor {
+    fn sub_assign(&mut self, other: Tensor) {
+        if self.shape != other.shape {
+            panic!("MissMatchedShapes: Cannot sub_assign tensors with different shapes");
+        }
+
+        for (a, b) in self.data.iter_mut().zip(other.data.iter()) {
+            *a -= b;
+        }
+        self.requires_grad |= other.requires_grad;
+    }
+}

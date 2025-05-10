@@ -14,15 +14,33 @@ pub enum TensorErrors {
 
 #[derive(Clone)]
 pub struct Tensor {
-    dims: usize,
-    shape: Vec<usize>,
-    size: usize,
+    pub dims: usize,
+    pub shape: Vec<usize>,
+    pub size: usize,
     pub data: Vec<f32>,
-    strides: Vec<usize>,
-    requires_grad: bool,
+    pub strides: Vec<usize>,
+    pub requires_grad: bool,
 }
 
 impl Tensor {
+    pub fn new(data: Vec<f32>, shape: Vec<usize>, requires_grad: Option<bool>) -> Result<Self, TensorErrors> {
+        let size = shape.iter().product::<usize>();
+        if size != data.len() {
+            return Err(TensorErrors::InvalidShape);
+        }
+        let dims = shape.len();
+        let strides = Self::compute_strides(&shape);
+        let grad = requires_grad.unwrap_or(false);
+        Ok(Tensor {
+            dims,
+            shape,
+            size,
+            data,
+            strides,
+            requires_grad: grad,
+        })
+    }
+    
     pub fn zeros(shape: Vec<usize>, requires_grad: Option<bool>) -> Self {
         let grad = requires_grad.unwrap_or(false);
         let dims = shape.len();
