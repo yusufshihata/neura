@@ -8,8 +8,11 @@ pub enum TensorErrors {
     OutOfBound,
     #[error("Invalid slice range.")]
     InvalidRange,
+    #[error("Trying to adding to miss-matched shapes tensors.")]
+    MissMatchedShapes,
 }
 
+#[derive(Clone)]
 pub struct Tensor {
     dims: usize,
     shape: Vec<usize>,
