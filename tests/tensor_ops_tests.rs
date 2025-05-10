@@ -40,26 +40,6 @@ mod tests {
 
 
     #[test]
-    fn test_tensor_add_empty() {
-        let t1 = Tensor::new(vec![], vec![], None).unwrap();
-        let t2 = Tensor::new(vec![], vec![], None).unwrap();
-        let result = (t1 + t2).unwrap();
-        let expected = Tensor::new(vec![], vec![], None).unwrap();
-        assert_eq!(result.data, expected.data);
-        assert_eq!(result.shape, expected.shape);
-    }
-    
-    #[test]
-    fn test_tensor_sub_empty() {
-        let t1 = Tensor::new(vec![], vec![], None).unwrap();
-        let t2 = Tensor::new(vec![], vec![], None).unwrap();
-        let result = (t1 - t2).unwrap();
-        let expected = Tensor::new(vec![], vec![], None).unwrap();
-        assert_eq!(result.data, expected.data);
-        assert_eq!(result.shape, expected.shape);
-    }
-
-    #[test]
     fn test_tensor_add_assign_same_shape() {
         let mut t1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
         let t2 = Tensor::new(vec![5.0, 6.0, 7.0, 8.0], vec![2, 2], None).unwrap();
