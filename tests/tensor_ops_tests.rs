@@ -80,4 +80,44 @@ mod tests {
         let result = Tensor::new(vec![1.0, 2.0], vec![3], None);
         assert!(matches!(result, Err(TensorErrors::InvalidShape)));
     }
+
+    #[test]
+    fn test_tensor_scalar_mul() {
+        let t = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        let scalar = 2.0;
+        let result = (t * scalar).unwrap();
+        let expected = Tensor::new(vec![2.0, 4.0, 6.0, 8.0], vec![2, 2], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_zero() {
+        let t = Tensor::new(vec![1.0, 2.0, 3.0], vec![3], None).unwrap();
+        let scalar = 0.0;
+        let result = (t * scalar).unwrap();
+        let expected = Tensor::new(vec![0.0, 0.0, 0.0], vec![3], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_negative() {
+        let t = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        let scalar = -1.0;
+        let result = (t * scalar).unwrap();
+        let expected = Tensor::new(vec![-1.0, -2.0, -3.0, -4.0], vec![2, 2], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_assign() {
+        let mut t = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        let scalar = 3.0;
+        t *= scalar;
+        let expected = Tensor::new(vec![3.0, 6.0, 9.0, 12.0], vec![2, 2], None).unwrap();
+        assert_eq!(t.data, expected.data);
+        assert_eq!(t.shape, expected.shape);
+    }
 }
