@@ -85,3 +85,31 @@ impl MulAssign<f32> for Tensor {
     }
 }
 
+impl Mul<Tensor> for Tensor {
+    type Output = Result<Tensor, TensorErrors>;
+
+    fn mul(self, other: Tensor) -> Self::Output {
+        if self.shape != other.shape {
+            return Err(TensorErrors::MissMatchedShapes);
+        }
+        let mut new_data = self.data;
+
+        for i in 0..self.size {
+            new_data[i] *= other.data[i];
+        }
+
+        Ok(Tensor::new(new_data, self.shape.clone(), Some(self.requires_grad)).expect("No requires grad for tensor."))
+    }
+}
+
+impl MulAssign<Tensor> for Tensor {
+    fn mul_assign(&mut self, other: Tensor) {
+        if self.shape != other.shape {
+            panic!("Miss matched shapes.");
+        }
+        for i in 0..self.size {
+            self.data[i] *= other.data[i];
+        }
+    }
+}
+

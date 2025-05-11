@@ -110,7 +110,7 @@ mod tests {
         assert_eq!(result.data, expected.data);
         assert_eq!(result.shape, expected.shape);
     }
-/*
+
     #[test]
     fn test_tensor_scalar_mul_assign() {
         let mut t = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
@@ -120,5 +120,42 @@ mod tests {
         assert_eq!(t.data, expected.data);
         assert_eq!(t.shape, expected.shape);
     }
-*/
+    
+    #[test]
+    fn test_tensor_element_wise_mul_same_shape() {
+        let t1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        let t2 = Tensor::new(vec![5.0, 6.0, 7.0, 8.0], vec![2, 2], None).unwrap();
+        let result = (t1 * t2).unwrap();
+        let expected = Tensor::new(vec![5.0, 12.0, 21.0, 32.0], vec![2, 2], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
+
+    #[test]
+    fn test_tensor_element_wise_mul_different_shapes() {
+        let t1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3], None).unwrap();
+        let t2 = Tensor::new(vec![4.0, 5.0], vec![2], None).unwrap();
+        let result = t1 * t2;
+        assert!(matches!(result, Err(TensorErrors::MissMatchedShapes)));
+    }
+
+    #[test]
+    fn test_tensor_element_wise_mul_empty_tensors() {
+        let t1 = Tensor::new(vec![], vec![0], None).unwrap();
+        let t2 = Tensor::new(vec![], vec![0], None).unwrap();
+        let result = (t1 * t2).unwrap();
+        let expected = Tensor::new(vec![], vec![0], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
+
+    #[test]
+    fn test_tensor_element_wise_mul_1d_tensors() {
+        let t1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3], None).unwrap();
+        let t2 = Tensor::new(vec![4.0, 5.0, 6.0], vec![3], None).unwrap();
+        let result = (t1 * t2).unwrap();
+        let expected = Tensor::new(vec![4.0, 10.0, 18.0], vec![3], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
 }
