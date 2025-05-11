@@ -158,4 +158,100 @@ mod tests {
         assert_eq!(result.data, expected.data);
         assert_eq!(result.shape, expected.shape);
     }
+
+    #[test]
+    fn test_tensor_matmul_2d() {
+        let t1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        let t2 = Tensor::new(vec![5.0, 6.0, 7.0, 8.0], vec![2, 2], None).unwrap();
+        let result = t1.matmul(&t2).unwrap();
+        let expected = Tensor::new(vec![19.0, 22.0, 43.0, 50.0], vec![2, 2], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
+
+    #[test]
+    fn test_tensor_matmul_3d_batched() {
+        // A: [2, 2, 2] (batch of 2 matrices [2, 2])
+        let t1 = Tensor::new(
+            vec![
+                1.0, 2.0, 3.0, 4.0, // batch 0
+                5.0, 6.0, 7.0, 8.0, // batch 1
+            ],
+            vec![2, 2, 2],
+            None,
+        )
+        .unwrap();
+        // B: [2, 2, 2] (batch of 2 matrices [2, 2])
+        let t2 = Tensor::new(
+            vec![
+                1.0, 0.0, 0.0, 1.0, // batch 0
+                2.0, 0.0, 0.0, 2.0, // batch 1
+            ],
+            vec![2, 2, 2],
+            None,
+        )
+        .unwrap();
+        let result = t1.matmul(&t2).unwrap();
+        // Expected: [2, 2, 2]
+        // Batch 0: [[1, 2], [3, 4]] * [[1, 0], [0, 1]] = [[1, 2], [3, 4]]
+        // Batch 1: [[5, 6], [7, 8]] * [[2, 0], [0, 2]] = [[10, 12], [14, 16]]
+        let expected = Tensor::new(
+            vec![1.0, 2.0, 3.0, 4.0, 10.0, 12.0, 14.0, 16.0],
+            vec![2, 2, 2],
+            None,
+        )
+        .unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
+
+    #[test]
+    fn test_tensor_matmul_broadcasting() {
+        // A: [2, 2, 3] (batch of 2 matrices [2, 3])
+        let t1 = Tensor::new(
+            vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, // batch 0
+                7.0, 8.0, 9.0, 10.0, 11.0, 12.0, // batch 1
+            ],
+            vec![2, 2, 3],
+            None,
+        )
+        .unwrap();
+        // B: [3, 2] (single matrix, broadcasted)
+        let t2 = Tensor::new(vec![1.0, 0.0, 0.0, 1.0, 1.0, 0.0], vec![3, 2], None).unwrap();
+        let result = t1.matmul(&t2).unwrap();
+        // Expected: [2, 2, 2]
+        // Batch 0: [[1, 2, 3], [4, 5, 6]] * [[1, 0], [0, 1], [1, 0]] = [[4, 2], [10, 5]]
+        // Batch 1: [[7, 8, 9], [10, 11, 12]] * [[1, 0], [0, 1], [1, 0]] = [[16, 8], [22, 11]]
+        let expected = Tensor::new(
+            vec![4.0, 2.0, 10.0, 5.0, 16.0, 8.0, 22.0, 11.0],
+            vec![2, 2, 2],
+            None,
+        )
+        .unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
+
+    #[test]
+    fn test_tensor_matmul_incompatible_shapes() {
+        let t1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        let t2 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1], None).unwrap();
+        let result = t1.matmul(&t2);
+        assert!(matches!(result, Err(TensorErrors::MissMatchedShapes)));
+    }
+
+    #[test]
+    fn test_tensor_matmul_1d_2d() {
+        // A: [3] (treated as [1, 3])
+        let t1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3], None).unwrap();
+        // B: [3, 2]
+        let t2 = Tensor::new(vec![1.0, 0.0, 0.0, 1.0, 1.0, 0.0], vec![3, 2], None).unwrap();
+        let result = t1.matmul(&t2).unwrap();
+        // Expected: [2] (from [1, 3] * [3, 2] = [1, 2])
+        let expected = Tensor::new(vec![4.0, 2.0], vec![2], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, expected.shape);
+    }
 }
+
