@@ -69,16 +69,11 @@ impl SubAssign for Tensor {
 
 impl Mul<f32> for Tensor {
     type Output = Tensor;
-    fn mul(mut self, scalar: f32) -> Tensor {
-        if self.size == 0 {
-            return self;
-        }
 
-        for i in 0..self.size {
-            self.data[i] *= scalar;
-        }
+    fn mul(self, scalar: f32) -> Self::Output {
+        let new_data = self.data.iter().map(|&x| x * scalar).collect();
 
-        self
+        Tensor::new(new_data, self.shape.clone(), Some(self.requires_grad)).expect("No requires grad for the tensor.")
     }
 }
 
