@@ -82,3 +82,11 @@ impl Mul<f32> for Tensor {
     }
 }
 
+impl MulAssign<f32> for Tensor {
+    fn mul_assign(&mut self, scalar: f32) {
+        for element in &mut self.data {
+            *element *= scalar;
+        }
+    }
+}
+
