@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub, AddAssign, SubAssign};
+use std::ops::{Add, Sub, AddAssign, SubAssign, Mul, MulAssign};
 use crate::tensor::tensor::{Tensor, TensorErrors};
 
 impl Add for Tensor {
@@ -66,3 +66,19 @@ impl SubAssign for Tensor {
         self.requires_grad |= other.requires_grad;
     }
 }
+
+impl Mul<f32> for Tensor {
+    type Output = Tensor;
+    fn mul(mut self, scalar: f32) -> Tensor {
+        if self.size == 0 {
+            return self;
+        }
+
+        for i in 0..self.size {
+            self.data[i] *= scalar;
+        }
+
+        self
+    }
+}
+
