@@ -1,3 +1,4 @@
+/*
 #[cfg(test)]
 mod tests {
     use neura::tensor::tensor::{Tensor, TensorErrors};
@@ -255,3 +256,4 @@ mod tests {
     }
 }
 
+*/

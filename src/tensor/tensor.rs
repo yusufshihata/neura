@@ -22,66 +22,8 @@ pub struct Tensor {
     pub requires_grad: bool,
 }
 
+/*
 impl Tensor {
-    pub fn new(data: Vec<f32>, shape: Vec<usize>, requires_grad: Option<bool>) -> Result<Self, TensorErrors> {
-        let size = shape.iter().product::<usize>();
-        if size != data.len() {
-            return Err(TensorErrors::InvalidShape);
-        }
-        let dims = shape.len();
-        let strides = Self::compute_strides(&shape);
-        let grad = requires_grad.unwrap_or(false);
-        Ok(Tensor {
-            dims,
-            shape,
-            size,
-            data,
-            strides,
-            requires_grad: grad,
-        })
-    }
-    
-    pub fn zeros(shape: Vec<usize>, requires_grad: Option<bool>) -> Self {
-        let grad = requires_grad.unwrap_or(false);
-        let dims = shape.len();
-        let size = shape.iter().product();
-        let strides = Self::compute_strides(&shape);
-        Tensor {
-            dims,
-            shape,
-            size,
-            data: vec![0.0; size],
-            strides,
-            requires_grad: grad,
-        }
-    }
-
-    pub fn ones(shape: Vec<usize>, requires_grad: Option<bool>) -> Self {
-        let grad = requires_grad.unwrap_or(false);
-        let dims = shape.len();
-        let size = shape.iter().product();
-        let strides = Self::compute_strides(&shape);
-        Tensor {
-            dims,
-            shape,
-            size,
-            data: vec![1.0; size],
-            strides,
-            requires_grad: grad,
-        }
-    }
-
-    fn compute_strides(shape: &[usize]) -> Vec<usize> {
-        let mut strides = vec![0; shape.len()];
-        if !shape.is_empty() {
-            strides[shape.len() - 1] = 1;
-            for i in (0..shape.len() - 1).rev() {
-                strides[i] = strides[i + 1] * shape[i + 1];
-            }
-        }
-        strides
-    }
-
     pub fn shape(&self) -> &Vec<usize> {
         &self.shape
     }
@@ -111,6 +53,17 @@ impl Tensor {
         }
         Ok(self.data[idx])
     }
+
+
+    pub fn compute_strides(self, shape: &[usize]) -> Vec<usize> {
+        let mut strides = vec![1; self.shape.len()];
+
+        for i in (0..self.shape.len() - 1).rev() {
+            strides[i] = strides[i+1] * self.shape[i+1];
+        }
+
+        strides
+    }
     
     pub fn slice(&self, ranges: Vec<std::ops::Range<usize>>) -> Result<Tensor, TensorErrors> {
 
@@ -136,8 +89,7 @@ impl Tensor {
                 shape: new_shape,
                 size: 0,
                 data: Vec::new(),
-                strides: new_strides,
-                requires_grad: self.requires_grad,
+                strides: new_strides, requires_grad: self.requires_grad,
             });
         }
 
@@ -192,3 +144,4 @@ impl Tensor {
     }
 }
 
+*/

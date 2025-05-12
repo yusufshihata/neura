@@ -1,3 +1,4 @@
+/*
 use std::ops::{Add, Sub, AddAssign, SubAssign, Mul, MulAssign};
 use crate::tensor::tensor::{Tensor, TensorErrors};
 
@@ -224,3 +225,4 @@ fn compute_batch_offset(batch_shape: &[usize], batch_idx: usize, broadcast_shape
     offset
 }
 
+*/
