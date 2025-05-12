@@ -238,4 +238,75 @@ mod tests {
         assert_eq!(result.data, expected.data);
         assert_eq!(result.shape, vec![1, 2, 1]);
     }
+
+    #[test]
+    fn test_apply_identity() {
+        let t = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        let result = t.apply(|x| x).unwrap();
+        let expected = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![2, 2]);
+        assert_eq!(result.requires_grad, false);
+    }
+
+    #[test]
+    fn test_apply_square() {
+        let t = Tensor::new(vec![1.0, 2.0, 3.0], vec![3], None).unwrap();
+        let result = t.apply(|x| x * x).unwrap();
+        let expected = Tensor::new(vec![1.0, 4.0, 9.0], vec![3], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![3]);
+        assert_eq!(result.requires_grad, false);
+    }
+
+    #[test]
+    fn test_apply_with_requires_grad() {
+        let t = Tensor::new(vec![1.0, 2.0], vec![2], Some(true)).unwrap();
+        let result = t.apply(|x| x.sin()).unwrap();
+        let expected_data = vec![1.0_f32.sin(), 2.0_f32.sin()];
+        let expected = Tensor::new(expected_data, vec![2], Some(true)).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![2]);
+        assert_eq!(result.requires_grad, true);
+    }
+
+    #[test]
+    fn test_apply_empty_tensor() {
+        let t = Tensor::new(vec![], vec![0], None).unwrap();
+        let result = t.apply(|x| x + 1.0).unwrap();
+        let expected = Tensor::new(vec![], vec![0], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![0]);
+        assert_eq!(result.requires_grad, false);
+    }
+
+    #[test]
+    fn test_apply_scalar() {
+        let t = Tensor::new(vec![2.0], vec![], None).unwrap();
+        let result = t.apply(|x| x * 3.0).unwrap();
+        let expected = Tensor::new(vec![6.0], vec![], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![]);
+        assert_eq!(result.requires_grad, false);
+    }
+
+    #[test]
+    fn test_apply_3d_tensor() {
+        let t = Tensor::new(
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0],
+            vec![2, 2, 2],
+            None,
+        )
+        .unwrap();
+        let result = t.apply(|x| x + 1.0).unwrap();
+        let expected = Tensor::new(
+            vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
+            vec![2, 2, 2],
+            None,
+        )
+        .unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![2, 2, 2]);
+        assert_eq!(result.requires_grad, false);
+    }
 }

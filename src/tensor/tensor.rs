@@ -182,4 +182,13 @@ impl Tensor {
         }
         Tensor::new(self.data.clone(), new_shape, Some(self.requires_grad))
     }
+
+    pub fn apply<F>(&self, f: F) -> Result<Tensor, TensorErrors>
+    where
+        F: Fn(f32) -> f32,
+    {
+        let new_data = self.data.iter().map(|&x| f(x)).collect();
+        Tensor::new(new_data, self.shape.clone(), Some(self.requires_grad))
+    }
 }
+
