@@ -174,4 +174,12 @@ impl Tensor {
             }
         }
     }
+    
+    pub fn reshape(&self, new_shape: Vec<usize>) -> Result<Tensor, TensorErrors> {
+        let new_size = new_shape.iter().product::<usize>();
+        if new_size != self.size {
+            return Err(TensorErrors::InvalidShape);
+        }
+        Tensor::new(self.data.clone(), new_shape, Some(self.requires_grad))
+    }
 }

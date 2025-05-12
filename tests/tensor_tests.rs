@@ -162,4 +162,80 @@ mod tests {
         assert_eq!(sliced.data, vec![]);
         assert_eq!(sliced.strides(), &vec![1, 1]);
     }
+
+    #[test]
+    fn test_reshape_2d_to_1d() {
+        let t = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        let result = t.reshape(vec![4]).unwrap();
+        let expected = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![4]);
+        assert_eq!(result.requires_grad, false);
+    }
+
+    #[test]
+    fn test_reshape_2d_to_3d() {
+        let t = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3], None).unwrap();
+        let result = t.reshape(vec![2, 1, 3]).unwrap();
+        let expected = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 1, 3], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![2, 1, 3]);
+        assert_eq!(result.requires_grad, false);
+    }
+
+    #[test]
+    fn test_reshape_with_requires_grad() {
+        let t = Tensor::new(vec![1.0, 2.0, 3.0], vec![3], Some(true)).unwrap();
+        let result = t.reshape(vec![1, 3]).unwrap();
+        let expected = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3], Some(true)).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![1, 3]);
+        assert_eq!(result.requires_grad, true);
+    }
+
+    #[test]
+    fn test_reshape_invalid_size() {
+        let t = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2], None).unwrap();
+        let result = t.reshape(vec![3]);
+        assert!(matches!(result, Err(TensorErrors::InvalidShape)));
+        let result = t.reshape(vec![2, 3]);
+        assert!(matches!(result, Err(TensorErrors::InvalidShape)));
+    }
+
+    #[test]
+    fn test_reshape_scalar() {
+        let t = Tensor::new(vec![42.0], vec![], None).unwrap();
+        let result = t.reshape(vec![1]).unwrap();
+        let expected = Tensor::new(vec![42.0], vec![1], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![1]);
+
+        let result = t.reshape(vec![1, 1]).unwrap();
+        let expected = Tensor::new(vec![42.0], vec![1, 1], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![1, 1]);
+    }
+
+    #[test]
+    fn test_reshape_empty_tensor() {
+        let t = Tensor::new(vec![], vec![0], None).unwrap();
+        let result = t.reshape(vec![0]).unwrap();
+        let expected = Tensor::new(vec![], vec![0], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![0]);
+
+        let result = t.reshape(vec![0, 1]).unwrap();
+        let expected = Tensor::new(vec![], vec![0, 1], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![0, 1]);
+    }
+
+    #[test]
+    fn test_reshape_to_singleton_dimensions() {
+        let t = Tensor::new(vec![1.0, 2.0], vec![2], None).unwrap();
+        let result = t.reshape(vec![1, 2, 1]).unwrap();
+        let expected = Tensor::new(vec![1.0, 2.0], vec![1, 2, 1], None).unwrap();
+        assert_eq!(result.data, expected.data);
+        assert_eq!(result.shape, vec![1, 2, 1]);
+    }
 }
