@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use neura::tensor::tensor::{Tensor, TensorErrors};
+    use neura::tensor::tensor::TensorErrors;
     use neura::tensor::tensor_builder::{TensorBuilder, InitMethod};
+    use ndarray::ArrayD;
 
     #[test]
     fn build_without_shape_is_error() {
@@ -18,10 +19,10 @@ mod tests {
             .init(InitMethod::Ones)
             .build()
             .unwrap();
-        assert_eq!(t.shape, vec![2, 0, 3]);
-        assert_eq!(t.size, 0);
+        
+        assert_eq!(t.shape(), vec![2, 0, 3]);
         assert_eq!(t.data.len(), 0);
-        assert_eq!(t.strides, vec![0, 3, 1]);
+        assert_eq!(t.requires_grad, false);
     }
 
     #[test]
@@ -31,8 +32,12 @@ mod tests {
             .init(InitMethod::Zeros)
             .build()
             .unwrap();
-        assert_eq!(z.size, 60);
-        assert_eq!(z.strides, vec![20, 5, 1]);
+        
+        // Check shape and data initialization
+        assert_eq!(z.shape(), vec![3, 4, 5]);
+        assert_eq!(z.data.shape(), [3, 4, 5]);
+
+        // Check initialization with zeros
         assert!(z.data.iter().all(|&x| x == 0.0));
 
         let o = TensorBuilder::new()
@@ -40,9 +45,13 @@ mod tests {
             .init(InitMethod::Ones)
             .build()
             .unwrap();
-        assert_eq!(o.size, 2);
+        
+        // Check shape and data initialization
+        assert_eq!(o.shape(), vec![1, 2, 1]);
+        assert_eq!(o.data.shape(), [1, 2, 1]);
+
+        // Check initialization with ones
         assert!(o.data.iter().all(|&x| x == 1.0));
-        assert_eq!(o.strides, vec![2, 1, 1]);
     }
 
     #[test]
@@ -53,12 +62,16 @@ mod tests {
             .init(InitMethod::FromData(raw.clone()))
             .build()
             .unwrap();
-        assert_eq!(t.data, raw);
+        
+        // Check that data matches the input data
+        assert_eq!(t.data, ArrayD::from_shape_vec(vec![3], raw).unwrap());
 
         let bad = TensorBuilder::new()
             .shape(&[2])
             .init(InitMethod::FromData(vec![1.0, 2.0, 3.0]))
             .build();
+        
+        // Check that an error is returned when the shape doesn't match the data size
         assert!(matches!(bad, Err(TensorErrors::InvalidShape)));
     }
 
@@ -69,6 +82,7 @@ mod tests {
             .init(InitMethod::Zeros)
             .build()
             .unwrap();
+        
         assert!(!t0.requires_grad);
 
         let t1 = TensorBuilder::new()
@@ -77,6 +91,7 @@ mod tests {
             .init(InitMethod::Zeros)
             .build()
             .unwrap();
+        
         assert!(t1.requires_grad);
     }
 
@@ -87,6 +102,11 @@ mod tests {
             .init(InitMethod::Zeros)
             .build()
             .unwrap();
+
+        // In this test, we don't need to verify dtype directly in the builder for now.
+        // Assuming dtype handling will be added as needed.
+        assert_eq!(t.shape(), vec![2, 2]);
+        assert!(t.data.iter().all(|&x| x == 0.0));
     }
 
     #[test]
@@ -105,6 +125,7 @@ mod tests {
             .build()
             .unwrap();
 
+        // Check that the data is the same for both tensors
         assert_eq!(a.data, b.data);
         assert_eq!(a.requires_grad, b.requires_grad);
     }

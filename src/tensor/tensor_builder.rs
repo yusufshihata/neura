@@ -1,4 +1,6 @@
-use crate::tensor::tensor::{ Tensor, TensorErrors };
+use crate::tensor::tensor::{Tensor, TensorErrors};
+use ndarray::{ArrayD, IxDyn};
+use std::iter::repeat;
 
 pub enum InitMethod {
     FromData(Vec<f32>),
@@ -13,70 +15,58 @@ pub struct TensorBuilder {
 }
 
 impl TensorBuilder {
-    pub fn shape(mut self, shape: &[usize]) -> Self {
-        self.shape = shape.to_vec();
-
-        self
-    }
-
-    pub fn requires_grad(mut self, flag: bool) -> Self {
-        self.requires_grad = flag;
-
-        self
-    }
-
-
-    pub fn init(mut self, method: InitMethod) -> Self {
-        self.init_method = method;
-
-        self
-    }
-
-    pub fn compute_strides(&self) -> Vec<usize> {
-        let mut strides = vec![1; self.shape.len()];
-
-        for i in (0..self.shape.len() - 1).rev() {
-            strides[i] = strides[i+1] * self.shape[i+1];
-        }
-
-        strides
-    }
-
-    pub fn build(self) -> Result<Tensor, TensorErrors> {
-        let size: usize = self.shape.iter().product();
-
-        if self.shape == vec![] {
-            return Err(TensorErrors::InvalidShape);
-        }
-
-        let strides = self.compute_strides();
-
-        let data = match &self.init_method {
-            InitMethod::Zeros => vec![0.0; size],
-            InitMethod::Ones => vec![1.0; size],
-            InitMethod::FromData(d) => {
-                if d.len() != size {
-                    return Err(TensorErrors::InvalidShape);
-                }
-                d.clone()
-            },
-        };
-
-        Ok(Tensor {
-            size,
-            dims: self.shape.len(),
-            shape: self.shape,
-            data,
-            strides,
-            requires_grad: self.requires_grad,
-        })
-    }
-
     pub fn new() -> Self {
         Self {
             shape: vec![],
             requires_grad: false,
             init_method: InitMethod::Zeros,
         }
+    }
+
+    pub fn shape(mut self, shape: &[usize]) -> Self {
+        self.shape = shape.to_vec();
+        self
+    }
+
+    pub fn requires_grad(mut self, flag: bool) -> Self {
+        self.requires_grad = flag;
+        self
+    }
+
+    pub fn init(mut self, method: InitMethod) -> Self {
+        self.init_method = method;
+        self
+    }
+
+    pub fn build(self) -> Result<Tensor, TensorErrors> {
+        if self.shape.is_empty() {
+            return Err(TensorErrors::InvalidShape);
+        }
+
+        let size: usize = self.shape.iter().product();
+        let shape_dyn = IxDyn(&self.shape);
+
+        let array = match self.init_method {
+            InitMethod::Zeros => {
+                ArrayD::from_shape_vec(shape_dyn, repeat(0.0).take(size).collect())
+                    .map_err(|_| TensorErrors::InvalidShape)?
+            }
+            InitMethod::Ones => {
+                ArrayD::from_shape_vec(shape_dyn, repeat(1.0).take(size).collect())
+                    .map_err(|_| TensorErrors::InvalidShape)?
+            }
+            InitMethod::FromData(data) => {
+                if data.len() != size {
+                    return Err(TensorErrors::InvalidShape);
+                }
+                ArrayD::from_shape_vec(shape_dyn, data).map_err(|_| TensorErrors::InvalidShape)?
+            }
+        };
+
+        Ok(Tensor {
+            data: array,
+            requires_grad: self.requires_grad,
+            grad: None,
+        })
     }
 }

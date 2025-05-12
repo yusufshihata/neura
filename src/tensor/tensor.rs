@@ -1,3 +1,4 @@
+use ndarray::ArrayD;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq)]
@@ -14,12 +15,27 @@ pub enum TensorErrors {
 
 #[derive(Clone)]
 pub struct Tensor {
-    pub dims: usize,
-    pub shape: Vec<usize>,
-    pub size: usize,
-    pub data: Vec<f32>,
-    pub strides: Vec<usize>,
+    pub data: ArrayD<f32>,
     pub requires_grad: bool,
+    pub grad: Option<ArrayD<f32>>
+}
+
+impl Tensor {
+    pub fn shape(&self) -> Vec<usize> {
+        self.data.shape().to_vec()
+    }
+
+    pub fn ndim(&self) -> usize {
+        self.data.ndim()
+    }
+
+    pub fn size(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn strides(&self) -> Vec<isize> {
+        self.data.strides().to_vec()
+    }
 }
 
 /*
