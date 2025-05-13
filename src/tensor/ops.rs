@@ -1,4 +1,4 @@
-use std::ops::{ Index, IndexMut, Add, AddAssign, Sub, SubAssign };
+use std::ops::{ Index, IndexMut, Add, AddAssign, Sub, SubAssign, Mul, MulAssign };
 use ndarray::{ArrayD, s};
 use crate::tensor::tensor::{ Tensor, TensorErrors };
 
@@ -115,3 +115,25 @@ impl<'b> SubAssign<&'b Tensor> for Tensor {
         self.data -= &other.data;
     }
 }
+
+
+impl<'a> Mul<f32> for &'a Tensor {
+    type Output = Tensor;
+
+    fn mul(self, scalar: f32) -> Self::Output {
+        let data = &self.data * scalar;
+
+        Tensor {
+            data,
+            requires_grad: self.requires_grad,
+            grad: None
+        }
+    }
+}
+
+impl MulAssign<f32> for Tensor {
+    fn mul_assign(&mut self, scalar: f32) {
+        self.data *= scalar;
+    }
+}
+

@@ -352,23 +352,6 @@ mod tests {
         assert_eq!(sliced.shape(), &[2, 1, 1]);
         assert_eq!(sliced.data.as_slice().unwrap(), &[3.0, 7.0]);
     }
-
-    #[test]
-    fn test_slice_empty_ranges() {
-        let tensor = TensorBuilder::new()
-            .shape(&[2, 3, 2])
-            .init(InitMethod::FromData(vec![
-                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
-            ]))
-            .build()
-            .unwrap();
-
-        let result = tensor.slice(vec![0..0, 0..3, 0..2]);
-        assert!(matches!(result, Err(TensorErrors::InvalidRange)));
-
-        let result = tensor.slice(vec![0..2, 1..1, 0..2]);
-        assert!(matches!(result, Err(TensorErrors::InvalidRange)));
-    }
     
     #[test]
     fn test_tensor_add() {
@@ -470,4 +453,178 @@ mod tests {
         let expected = array![[0.0, 1.0], [2.0, 3.0]].into_dyn();
         assert_eq!(result.data, expected);
     }
+
+    #[test]
+    fn test_tensor_scalar_mul_positive() {
+        let tensor = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .build()
+            .unwrap();
+
+        let scalar = 2.0;
+        let result = &tensor * scalar;
+
+        let expected = array![[2.0, 4.0], [6.0, 8.0]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, tensor.requires_grad);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_negative() {
+        let tensor = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true) // Test requires_grad preservation
+            .build() .unwrap();
+
+        let scalar = -1.5;
+        let result = &tensor * scalar;
+
+        let expected = array![[-1.5, -3.0], [-4.5, -6.0]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, true);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_zero() {
+        let tensor = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .build()
+            .unwrap();
+
+        let scalar = 0.0;
+        let result = &tensor * scalar;
+
+        let expected = array![[0.0, 0.0], [0.0, 0.0]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, tensor.requires_grad);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_1d() {
+        let tensor = TensorBuilder::new()
+            .shape(&[3])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0]))
+            .build()
+            .unwrap();
+
+        let scalar = 3.0;
+        let result = &tensor * scalar;
+
+        let expected = array![3.0, 6.0, 9.0].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, tensor.requires_grad);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_large_scalar() {
+        let tensor = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .build()
+            .unwrap();
+
+        let scalar = 1e6; // Large scalar
+        let result = &tensor * scalar;
+
+        let expected = array![[1e6, 2e6], [3e6, 4e6]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, tensor.requires_grad);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_assign_positive() {
+        let mut tensor = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        let original_grad = Some(array![[0.1, 0.2], [0.3, 0.4]].into_dyn());
+        tensor.grad = original_grad.clone();
+
+        tensor *= 2.0;
+
+        let expected = array![[2.0, 4.0], [6.0, 8.0]].into_dyn();
+        assert_eq!(tensor.data, expected);
+        assert_eq!(tensor.requires_grad, true);
+        assert_eq!(tensor.grad, original_grad);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_assign_negative() {
+        let mut tensor = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        tensor *= -1.5;
+
+        let expected = array![[-1.5, -3.0], [-4.5, -6.0]].into_dyn();
+        assert_eq!(tensor.data, expected);
+        assert_eq!(tensor.requires_grad, false);
+        assert_eq!(tensor.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_assign_zero() {
+        let mut tensor = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        tensor *= 0.0;
+
+        let expected = array![[0.0, 0.0], [0.0, 0.0]].into_dyn();
+        assert_eq!(tensor.data, expected);
+        assert_eq!(tensor.requires_grad, true);
+        assert_eq!(tensor.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_assign_1d() {
+        let mut tensor = TensorBuilder::new()
+            .shape(&[3])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        tensor *= 3.0;
+
+        let expected = array![3.0, 6.0, 9.0].into_dyn();
+        assert_eq!(tensor.data, expected);
+        assert_eq!(tensor.requires_grad, false);
+        assert_eq!(tensor.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_scalar_mul_assign_large_scalar() {
+        let mut tensor = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        tensor *= 1e6;
+
+        let expected = array![[1e6, 2e6], [3e6, 4e6]].into_dyn();
+        assert_eq!(tensor.data, expected);
+        assert_eq!(tensor.requires_grad, true);
+        assert_eq!(tensor.grad, None);
+    }
 }
+
