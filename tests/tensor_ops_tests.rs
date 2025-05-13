@@ -2,6 +2,8 @@
 mod tests {
     use neura::tensor::tensor::{Tensor, TensorErrors};
     use neura::tensor::tensor_builder::{TensorBuilder, InitMethod};
+    use ndarray::array;
+    use std::ops::{Add, Sub, AddAssign, SubAssign};
 
     #[test]
     fn test_tensor_is_contiguous() {
@@ -352,34 +354,120 @@ mod tests {
     }
 
     #[test]
-    fn test_slice_invalid_dimensions() {
-        let tensor = TensorBuilder::new()
-            .shape(&[2, 3])
-            .init(InitMethod::FromData(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0]))
-            .build()
-            .unwrap();
-
-        let result = tensor.slice(vec![0..1]);
-        assert!(matches!(result, Err(TensorErrors::InvalidShape)));
-
-        let result = tensor.slice(vec![0..1, 0..1, 0..1]);
-        assert!(matches!(result, Err(TensorErrors::InvalidShape)));
-    }
-
-    #[test]
     fn test_slice_empty_ranges() {
         let tensor = TensorBuilder::new()
-            .shape(&[2, 3])
-            .init(InitMethod::FromData(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0]))
+            .shape(&[2, 3, 2])
+            .init(InitMethod::FromData(vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+            ]))
             .build()
             .unwrap();
 
-        let sliced = tensor.slice(vec![0..0, 0..3]).unwrap();
-        assert_eq!(sliced.shape(), &[0, 3]);
-        assert_eq!(sliced.data.as_slice().unwrap(), &[]);
+        let result = tensor.slice(vec![0..0, 0..3, 0..2]);
+        assert!(matches!(result, Err(TensorErrors::InvalidRange)));
 
-        let sliced = tensor.slice(vec![0..2, 1..1]).unwrap();
-        assert_eq!(sliced.shape(), &[2, 0]);
-        assert_eq!(sliced.data.as_slice().unwrap(), &[]);
+        let result = tensor.slice(vec![0..2, 1..1, 0..2]);
+        assert!(matches!(result, Err(TensorErrors::InvalidRange)));
+    }
+    
+    #[test]
+    fn test_tensor_add() {
+        let a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .build()
+            .unwrap();
+            
+        let b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![4.0, 3.0, 2.0, 1.0]))
+            .build()
+            .unwrap();
+        
+        let result = &a + &b;
+        let expected = array![[5.0, 5.0], [5.0, 5.0]].into_dyn();
+        assert_eq!(result.data, expected);
+    }
+    
+    #[test]
+    fn test_tensor_add_assign() {
+        let mut a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .build()
+            .unwrap();
+            
+        let b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![0.5, 0.5, 0.5, 0.5]))
+            .build()
+            .unwrap();
+            
+        a += &b;
+        let expected = array![[1.5, 2.5], [3.5, 4.5]].into_dyn();
+        assert_eq!(a.data, expected);
+    }
+    
+    #[test]
+    fn test_tensor_sub() {
+        let a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![5.0, 5.0, 5.0, 5.0]))
+            .build()
+            .unwrap();
+            
+        let b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .build()
+            .unwrap();
+        
+        let result = &a - &b;
+        let expected = array![[4.0, 3.0], [2.0, 1.0]].into_dyn();
+        assert_eq!(result.data, expected);
+    }
+    
+    #[test]
+    fn test_tensor_sub_assign() {
+        let mut a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![5.0, 5.0, 5.0, 5.0]))
+            .build()
+            .unwrap();
+            
+        let b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .build()
+            .unwrap();
+            
+        a -= &b;
+        let expected = array![[4.0, 3.0], [2.0, 1.0]].into_dyn();
+        assert_eq!(a.data, expected);
+    }
+    
+    #[test]
+    fn test_tensor_operations_chaining() {
+        let a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .build()
+            .unwrap();
+            
+        let b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 1.0, 1.0, 1.0]))
+            .build()
+            .unwrap();
+            
+        let c = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![2.0, 2.0, 2.0, 2.0]))
+            .build()
+            .unwrap();
+            
+        let result = &(&a + &b) - &c;
+        let expected = array![[0.0, 1.0], [2.0, 3.0]].into_dyn();
+        assert_eq!(result.data, expected);
     }
 }

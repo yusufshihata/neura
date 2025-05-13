@@ -1,4 +1,4 @@
-use std::ops::{ Index, IndexMut };
+use std::ops::{ Index, IndexMut, Add, AddAssign, Sub, SubAssign };
 use ndarray::{ArrayD, s};
 use crate::tensor::tensor::{ Tensor, TensorErrors };
 
@@ -37,12 +37,10 @@ impl Tensor {
             return Err(TensorErrors::InvalidShape);
         }
 
-        // Convert ranges to isize and collect them
         let slice_spec: Vec<_> = ranges.into_iter()
             .map(|r| r.start as isize..r.end as isize)
             .collect();
         
-        // Create a dynamic slice spec
         let sliced = match slice_spec.len() {
             1 => self.data.slice(s![slice_spec[0].clone()]).into_dyn(),
             2 => self.data.slice(s![
@@ -75,5 +73,45 @@ impl Tensor {
             requires_grad: self.requires_grad,
             grad: None,
         })
+    }
+}
+
+impl<'a, 'b> Add<&'b Tensor> for &'a Tensor {
+    type Output = Tensor;
+
+    fn add(self, other: &'b Tensor) -> Self::Output {
+        let data = &self.data + &other.data;
+
+        Tensor {
+            data,
+            requires_grad: self.requires_grad || other.requires_grad,
+            grad: None,
+        }
+    }
+}
+
+impl<'b> AddAssign<&'b Tensor> for Tensor {
+    fn add_assign(&mut self, other: &'b Tensor) {
+        self.data += &other.data;
+    }
+}
+
+impl<'a, 'b> Sub<&'b Tensor> for &'a Tensor {
+    type Output = Tensor;
+    
+    fn sub(self, other: &'b Tensor) -> Self::Output {
+        let data = &self.data - &other.data;
+
+        Tensor {
+            data,
+            requires_grad: self.requires_grad || other.requires_grad,
+            grad: None
+        }
+    }
+}
+
+impl<'b> SubAssign<&'b Tensor> for Tensor {
+    fn sub_assign(&mut self, other: &'b Tensor) {
+        self.data -= &other.data;
     }
 }
