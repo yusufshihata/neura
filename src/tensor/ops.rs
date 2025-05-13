@@ -1,5 +1,5 @@
 use std::ops::{ Index, IndexMut, Add, AddAssign, Sub, SubAssign, Mul, MulAssign };
-use ndarray::{ArrayD, s};
+use ndarray::{ArrayD, s, ShapeError};
 use crate::tensor::tensor::{ Tensor, TensorErrors };
 
 
@@ -134,6 +134,31 @@ impl<'a> Mul<f32> for &'a Tensor {
 impl MulAssign<f32> for Tensor {
     fn mul_assign(&mut self, scalar: f32) {
         self.data *= scalar;
+    }
+}
+
+impl<'a, 'b> Mul<&'b Tensor> for &'b Tensor {
+    type Output = Result<Tensor, ShapeError>;
+    fn mul(self, other: &'b Tensor) -> Self::Output {
+        if self.shape() != other.shape() {
+            return Err(ShapeError::from_kind(ndarray::ErrorKind::IncompatibleShape));
+        }
+        
+        let data = &self.data * &other.data;
+        Ok(Tensor {
+            data,
+            requires_grad: self.requires_grad || other.requires_grad,
+            grad: None,
+        })
+    }
+}
+
+impl<'b> MulAssign<&'b Tensor> for Tensor {
+    fn mul_assign(&mut self, other: &'b Tensor) {
+        if self.shape() != other.shape() {
+            panic!("Invalid Shapes.");
+        }
+        self.data *= &other.data;
     }
 }
 

@@ -5,4 +5,10 @@ edition = "2024"
 
 [dependencies]
 thiserror = "1.0"
-ndarray = "0.16.1"
+ndarray = { version = "0.16.1", features = ["blas"] }
+blas-src = { version = "0.8", optional = true }
+openblas-src = { version = "0.10", optional = true }
+
+[features]
+blas = ["ndarray/blas", "blas-src", "openblas-src"]
+

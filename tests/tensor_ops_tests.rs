@@ -626,5 +626,256 @@ mod tests {
         assert_eq!(tensor.requires_grad, true);
         assert_eq!(tensor.grad, None);
     }
+
+    #[test]
+    fn test_tensor_mul_correctness() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![2.0, 2.0, 2.0, 2.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let result = (&tensor_a * &tensor_b).unwrap();
+        let expected = array![[2.0, 4.0], [6.0, 8.0]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, true);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_mul_assign_correctness() {
+        let mut tensor_a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![0.5, 0.5, 0.5, 0.5]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        tensor_a *= &tensor_b;
+        let expected = array![[0.5, 1.0], [1.5, 2.0]].into_dyn();
+        assert_eq!(tensor_a.data, expected);
+        assert_eq!(tensor_a.requires_grad, true);
+        assert_eq!(tensor_a.grad, None);
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid Shapes.")]
+    fn test_tensor_mul_assign_shape_mismatch() {
+        let mut tensor_a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 3])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        tensor_a *= &tensor_b; // Should panic
+    }
+
+    #[test]
+    fn test_tensor_mul_zero() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![0.0, 0.0, 0.0, 0.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let result = (&tensor_a * &tensor_b).unwrap();
+        let expected = array![[0.0, 0.0], [0.0, 0.0]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, false);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_mul_negative() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![-1.0, -2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![2.0, -2.0, -2.0, 2.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let result = (&tensor_a * &tensor_b).unwrap();
+        let expected = array![[-2.0, 4.0], [-6.0, 8.0]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, true);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_mul_large_values() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[1, 2])
+            .init(InitMethod::FromData(vec![1e6, 1e6]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[1, 2])
+            .init(InitMethod::FromData(vec![2.0, 3.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let result = (&tensor_a * &tensor_b).unwrap();
+        let expected = array![[2e6, 3e6]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, false);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_mul_nan() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[1, 2])
+            .init(InitMethod::FromData(vec![1.0, f32::NAN]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[1, 2])
+            .init(InitMethod::FromData(vec![2.0, 3.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let result = (&tensor_a * &tensor_b).unwrap();
+        let expected = array![[2.0, f32::NAN]].into_dyn();
+        assert_eq!(result.data[[0, 0]], 2.0);
+        assert!(result.data[[0, 1]].is_nan());
+        assert_eq!(result.requires_grad, false);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_mul_1d() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[3])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[3])
+            .init(InitMethod::FromData(vec![4.0, 5.0, 6.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        let result = (&tensor_a * &tensor_b).unwrap();
+        let expected = array![4.0, 10.0, 18.0].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, true);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_mul_3d() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[2, 1, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 1, 2])
+            .init(InitMethod::FromData(vec![2.0, 2.0, 2.0, 2.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let result = (&tensor_a * &tensor_b).unwrap();
+        let expected = array![[[2.0, 4.0]], [[6.0, 8.0]]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, true);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_mul_assign_zero() {
+        let mut tensor_a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![0.0, 0.0, 0.0, 0.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        tensor_a *= &tensor_b;
+        let expected = array![[0.0, 0.0], [0.0, 0.0]].into_dyn();
+        assert_eq!(tensor_a.data, expected);
+        assert_eq!(tensor_a.requires_grad, true);
+        assert_eq!(tensor_a.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_mul_assign_negative() {
+        let mut tensor_a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![-2.0, -2.0, -2.0, -2.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        tensor_a *= &tensor_b;
+        let expected = array![[-2.0, -4.0], [-6.0, -8.0]].into_dyn();
+        assert_eq!(tensor_a.data, expected);
+        assert_eq!(tensor_a.requires_grad, true);
+        assert_eq!(tensor_a.grad, None);
+    }
 }
 
