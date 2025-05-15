@@ -1,9 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use neura::tensor::tensor::{Tensor, TensorErrors};
-    use neura::tensor::tensor_builder::{TensorBuilder, InitMethod};
     use ndarray::array;
-    use std::ops::{Add, Sub, AddAssign, SubAssign};
+    use neura::tensor::tensor::{Tensor, TensorErrors};
+    use neura::tensor::tensor_builder::{InitMethod, TensorBuilder};
+    use rayon::prelude::iter;
+    use std::ops::{Add, AddAssign, Sub, SubAssign};
 
     #[test]
     fn test_tensor_is_contiguous() {
@@ -238,7 +239,9 @@ mod tests {
     fn test_flat_indexing_3d() {
         let tensor = TensorBuilder::new()
             .shape(&[2, 2, 2])
-            .init(InitMethod::FromData(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
+            .init(InitMethod::FromData(vec![
+                0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,
+            ]))
             .build()
             .unwrap();
         // Row-major: [0.0, 1.0] (0,0,:), [2.0, 3.0] (0,1,:), [4.0, 5.0] (1,0,:), [6.0, 7.0] (1,1,:)
@@ -269,7 +272,9 @@ mod tests {
     fn test_range_slicing_3d() {
         let tensor = TensorBuilder::new()
             .shape(&[2, 2, 2])
-            .init(InitMethod::FromData(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
+            .init(InitMethod::FromData(vec![
+                0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,
+            ]))
             .build()
             .unwrap();
         assert_eq!(&tensor[0..4], &[0.0, 1.0, 2.0, 3.0]); // First "plane"
@@ -308,7 +313,9 @@ mod tests {
     fn test_mutation_through_range_slicing_3d() {
         let mut tensor = TensorBuilder::new()
             .shape(&[2, 2, 2])
-            .init(InitMethod::FromData(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]))
+            .init(InitMethod::FromData(vec![
+                0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,
+            ]))
             .build()
             .unwrap();
         tensor[0..4].copy_from_slice(&[10.0, 20.0, 30.0, 40.0]); // Mutate first plane
@@ -352,7 +359,7 @@ mod tests {
         assert_eq!(sliced.shape(), &[2, 1, 1]);
         assert_eq!(sliced.data.as_slice().unwrap(), &[3.0, 7.0]);
     }
-    
+
     #[test]
     fn test_tensor_add() {
         let a = TensorBuilder::new()
@@ -360,18 +367,18 @@ mod tests {
             .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
             .build()
             .unwrap();
-            
+
         let b = TensorBuilder::new()
             .shape(&[2, 2])
             .init(InitMethod::FromData(vec![4.0, 3.0, 2.0, 1.0]))
             .build()
             .unwrap();
-        
+
         let result = &a + &b;
         let expected = array![[5.0, 5.0], [5.0, 5.0]].into_dyn();
         assert_eq!(result.data, expected);
     }
-    
+
     #[test]
     fn test_tensor_add_assign() {
         let mut a = TensorBuilder::new()
@@ -379,18 +386,18 @@ mod tests {
             .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
             .build()
             .unwrap();
-            
+
         let b = TensorBuilder::new()
             .shape(&[2, 2])
             .init(InitMethod::FromData(vec![0.5, 0.5, 0.5, 0.5]))
             .build()
             .unwrap();
-            
+
         a += &b;
         let expected = array![[1.5, 2.5], [3.5, 4.5]].into_dyn();
         assert_eq!(a.data, expected);
     }
-    
+
     #[test]
     fn test_tensor_sub() {
         let a = TensorBuilder::new()
@@ -398,18 +405,18 @@ mod tests {
             .init(InitMethod::FromData(vec![5.0, 5.0, 5.0, 5.0]))
             .build()
             .unwrap();
-            
+
         let b = TensorBuilder::new()
             .shape(&[2, 2])
             .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
             .build()
             .unwrap();
-        
+
         let result = &a - &b;
         let expected = array![[4.0, 3.0], [2.0, 1.0]].into_dyn();
         assert_eq!(result.data, expected);
     }
-    
+
     #[test]
     fn test_tensor_sub_assign() {
         let mut a = TensorBuilder::new()
@@ -417,18 +424,18 @@ mod tests {
             .init(InitMethod::FromData(vec![5.0, 5.0, 5.0, 5.0]))
             .build()
             .unwrap();
-            
+
         let b = TensorBuilder::new()
             .shape(&[2, 2])
             .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
             .build()
             .unwrap();
-            
+
         a -= &b;
         let expected = array![[4.0, 3.0], [2.0, 1.0]].into_dyn();
         assert_eq!(a.data, expected);
     }
-    
+
     #[test]
     fn test_tensor_operations_chaining() {
         let a = TensorBuilder::new()
@@ -436,19 +443,19 @@ mod tests {
             .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
             .build()
             .unwrap();
-            
+
         let b = TensorBuilder::new()
             .shape(&[2, 2])
             .init(InitMethod::FromData(vec![1.0, 1.0, 1.0, 1.0]))
             .build()
             .unwrap();
-            
+
         let c = TensorBuilder::new()
             .shape(&[2, 2])
             .init(InitMethod::FromData(vec![2.0, 2.0, 2.0, 2.0]))
             .build()
             .unwrap();
-            
+
         let result = &(&a + &b) - &c;
         let expected = array![[0.0, 1.0], [2.0, 3.0]].into_dyn();
         assert_eq!(result.data, expected);
@@ -477,7 +484,8 @@ mod tests {
             .shape(&[2, 2])
             .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
             .requires_grad(true) // Test requires_grad preservation
-            .build() .unwrap();
+            .build()
+            .unwrap();
 
         let scalar = -1.5;
         let result = &tensor * scalar;
@@ -877,5 +885,116 @@ mod tests {
         assert_eq!(tensor_a.requires_grad, true);
         assert_eq!(tensor_a.grad, None);
     }
-}
 
+    #[test]
+    fn test_tensor_matmul_basic() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[2, 3])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[3, 2])
+            .init(InitMethod::FromData(vec![7.0, 8.0, 9.0, 10.0, 11.0, 12.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let result = tensor_a.matmul(&tensor_b);
+        let expected = array![[58.0, 64.0], [139.0, 154.0]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, false);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_matmul_broadcasting() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[1, 2, 3])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 3, 2])
+            .init(InitMethod::FromData(vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+            ]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let result = tensor_a.matmul(&tensor_b);
+        let expected =
+            array![[[22.0, 28.0], [49.0, 64.0]], [[58.0, 64.0], [139.0, 154.0]]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, false);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    fn test_tensor_matmul_requires_grad() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(true)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![5.0, 6.0, 7.0, 8.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let result = tensor_a.matmul(&tensor_b);
+        let expected = array![[19.0, 22.0], [43.0, 50.0]].into_dyn();
+        assert_eq!(result.data, expected);
+        assert_eq!(result.requires_grad, true);
+        assert_eq!(result.grad, None);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_tensor_matmul_less_than_2d() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[3])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[3])
+            .init(InitMethod::FromData(vec![4.0, 5.0, 6.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let _ = tensor_a.matmul(&tensor_b);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_tensor_matmul_incompatible_shapes() {
+        let tensor_a = TensorBuilder::new()
+            .shape(&[2, 3])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let tensor_b = TensorBuilder::new()
+            .shape(&[2, 2])
+            .init(InitMethod::FromData(vec![1.0, 2.0, 3.0, 4.0]))
+            .requires_grad(false)
+            .build()
+            .unwrap();
+
+        let _ = tensor_a.matmul(&tensor_b);
+    }
+}
