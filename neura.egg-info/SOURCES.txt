@@ -1,0 +1,15 @@
+README.md
+setup.py
+neura.egg-info/PKG-INFO
+neura.egg-info/SOURCES.txt
+neura.egg-info/dependency_links.txt
+neura.egg-info/requires.txt
+neura.egg-info/top_level.txt
+src/__init__.py
+src/core/__init__.py
+src/core/autograd.py
+src/core/functional.py
+src/core/tensor.py
+src/core/ops/basic_ops.py
+src/core/ops/nn_ops.py
+tests/test_tensor.py
