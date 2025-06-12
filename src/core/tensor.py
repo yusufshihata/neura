@@ -47,20 +47,3 @@ class Tensor:
     
     def __repr__(self):
         return f"{self.data}, dtype={self.dtype}"
-
-tensor1 = Tensor(np.array([[[2,3,4], [23,34,54], [23, 433, 435]]]))
-tensor2 = Tensor(np.array([[[3,46,64], [23,4,54], [23,43,43]]]))
-
-tensor3 = tensor1 + tensor2
-tensor4 = tensor1 @ tensor2
-tensor5 = tensor1 * 3
-tensor6 = tensor1 - tensor2
-
-print(tensor1)
-print(tensor2)
-print(tensor3)
-print(tensor4)
-print(tensor5)
-print(tensor6)
-print(tensor1[0, 2, 2])
-print(tensor1[0, 1, 0:2])
