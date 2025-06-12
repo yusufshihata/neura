@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from neura import Tensor
 
+
 class TestTensor(unittest.TestCase):
     def test_init(self):
         """Test Tensor initialization with default parameters."""
@@ -131,7 +132,7 @@ class TestTensor(unittest.TestCase):
     def test_matmul_incompatible(self):
         """Test matrix multiplication with incompatible shapes."""
         data1 = np.array([[1, 2, 3]], dtype=np.float32)  # Shape (1, 3)
-        data2 = np.array([[4, 5]], dtype=np.float32)     # Shape (1, 2)
+        data2 = np.array([[4, 5]], dtype=np.float32)  # Shape (1, 2)
         tensor1 = Tensor(data1)
         tensor2 = Tensor(data2)
         with self.assertRaises(ValueError):
@@ -187,5 +188,6 @@ class TestTensor(unittest.TestCase):
         self.assertTrue(tensor1, expected_tensor)
         self.assertTrue(tensor1.requires_grad)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
