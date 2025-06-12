@@ -41,9 +41,29 @@ class Tensor:
         dtype = self.dtype
 
         return Tensor(new_data, requires_grad, dtype)
+    
+    def __iadd__(self, other: Tensor) -> Tensor:
+        self.data += other.data
+
+        return self
+    
+    def __isub__(self, other: Tensor) -> Tensor:
+        self.data -= other.data
+
+        return self
+    
+    def __imul__(self, scalar: np.float32) -> Tensor:
+        self.data *= scalar
+
+        return self
+    
+    def __imatmul__(self, other: Tensor) -> Tensor:
+        self.data @= other.data
+
+        return self
 
     def __getitem__(self, idx: Union[int, slice]) -> Tensor.dtype:
         return self.data[idx]
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.data}, dtype={self.dtype}"

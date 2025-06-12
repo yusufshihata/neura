@@ -144,5 +144,48 @@ class TestTensor(unittest.TestCase):
         with self.assertRaises(IndexError):
             item = tensor[3]
 
+    def test_iadd(self):
+        """Test in-place addition of two Tensors."""
+        data1 = np.array([1, 2, 3], dtype=np.float32)
+        data2 = np.array([4, 5, 6], dtype=np.float32)
+        tensor1 = Tensor(data1, requires_grad=True)
+        tensor2 = Tensor(data2, requires_grad=False)
+        tensor1 += tensor2
+        tensor3 = tensor1 + tensor2
+        self.assertTrue(tensor1, tensor3)
+        self.assertTrue(tensor1.requires_grad)
+
+    def test_isub(self):
+        """Test in-place subtraction of two Tensors."""
+        data1 = np.array([4, 5, 6], dtype=np.float32)
+        data2 = np.array([1, 2, 3], dtype=np.float32)
+        tensor1 = Tensor(data1, requires_grad=True)
+        tensor2 = Tensor(data2, requires_grad=True)
+        tensor1 -= tensor2
+        tensor3 = tensor1 - tensor2
+        self.assertTrue(tensor1, tensor3)
+        self.assertTrue(tensor1.requires_grad)
+
+    def test_imul(self):
+        """Test in-place multiplication by a scalar."""
+        data = np.array([1, 2, 3], dtype=np.float32)
+        scalar = np.float32(2.0)
+        tensor = Tensor(data, requires_grad=True)
+        tensor *= scalar
+        expected_tensor = tensor * scalar
+        self.assertTrue(tensor, expected_tensor)
+        self.assertTrue(tensor.requires_grad)
+
+    def test_imatmul(self):
+        """Test in-place matrix multiplication."""
+        data1 = np.array([[1, 2], [3, 4]], dtype=np.float32)
+        data2 = np.array([[5, 6], [7, 8]], dtype=np.float32)
+        tensor1 = Tensor(data1, requires_grad=True)
+        tensor2 = Tensor(data2, requires_grad=True)
+        tensor1 @= tensor2
+        expected_tensor = tensor1 @ tensor2
+        self.assertTrue(tensor1, expected_tensor)
+        self.assertTrue(tensor1.requires_grad)
+
 if __name__ == '__main__':
     unittest.main()
