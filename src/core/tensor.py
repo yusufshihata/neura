@@ -1,20 +1,25 @@
 from __future__ import annotations
 import numpy as np
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 
 class Tensor:
     def __init__(
         self,
-        data: np.ndarray,
+        data: Union[List[float], np.ndarray],
         requires_grad: bool = True,
         dtype: type = np.float32,
         grad: Optional[np.ndarray] = None,
     ):
-        self.data = data
+        if isinstance(data, list):
+            self.data = np.array(data)
+        else:
+            self.data = data
         self.requires_grad = requires_grad
         self.dtype = dtype
         self.grad = grad
+        self.ndim = self.data.ndim
+        self.shape = self.data.shape
 
     def __add__(self, other: Tensor) -> Tensor:
         new_data = self.data + other.data
@@ -65,5 +70,23 @@ class Tensor:
     def __getitem__(self, idx: Union[int, slice]) -> Tensor.dtype:
         return self.data[idx]
 
+    def __len__(self) -> int:
+        return self.data.size
+    
+    def view(self, *args: int) -> Tensor:
+        self.data = self.data.reshape(*args)
+
+        return self
+
+    def squeeze(self, dim: int) -> Tensor:
+        self.data = self.data.squeeze(axis=dim)
+
+        return self
+
+    def unsqueeze(self, dim: int) -> Tensor:
+        self.data = np.expand_dims(self.data, axis=dim)
+
+        return self
+    
     def __repr__(self) -> str:
         return f"{self.data}, dtype={self.dtype}"

@@ -188,6 +188,93 @@ class TestTensor(unittest.TestCase):
         self.assertTrue(tensor1, expected_tensor)
         self.assertTrue(tensor1.requires_grad)
 
+    def test_len(self):
+        """Test the __len__ method of Tensor."""
+        data = np.array([1, 2, 3], dtype=np.float32)
+        tensor = Tensor(data)
+        self.assertEqual(len(tensor), 3)
+
+        data = np.array([[1, 2], [3, 4]], dtype=np.float32)
+        tensor = Tensor(data)
+        self.assertEqual(len(tensor), 4)
+
+        data = np.array([[[1], [2]], [[3], [4]]], dtype=np.float32)
+        tensor = Tensor(data)
+        self.assertEqual(len(tensor), 4)
+
+        data = np.array([], dtype=np.float32)
+        tensor = Tensor(data)
+        self.assertEqual(len(tensor), 0)
+
+    def test_view(self):
+        """Test the view method of Tensor."""
+        data = np.array([1, 2, 3, 4, 5, 6], dtype=np.float32)
+        tensor = Tensor(data, requires_grad=True)
+        tensor.view(2, 3)
+        self.assertTrue(np.array_equal(tensor.data, np.array([[1, 2, 3], [4, 5, 6]])))
+        self.assertTrue(tensor.requires_grad)
+
+        data = np.array([[1, 2], [3, 4]], dtype=np.float32)
+        tensor = Tensor(data, requires_grad=True)
+        tensor.view(4)
+        self.assertTrue(np.array_equal(tensor.data, np.array([1, 2, 3, 4])))
+        self.assertTrue(tensor.requires_grad)
+
+        data = np.array([[1, 2], [3, 4]], dtype=np.float32)
+        tensor = Tensor(data, requires_grad=True)
+        tensor.view(2, 2)
+        self.assertTrue(np.array_equal(tensor.data, data))
+        self.assertTrue(tensor.requires_grad)
+        
+        data = np.array([1, 2, 3, 4], dtype=np.float32)
+        tensor = Tensor(data)
+        with self.assertRaises(ValueError):
+            tensor.view(2, 3)
+
+    def test_squeeze(self):
+        """Test the squeeze method of Tensor."""
+        data = np.array([[1, 2, 3]], dtype=np.float32)
+        tensor = Tensor(data, requires_grad=True)
+        tensor.squeeze(0)
+        self.assertTrue(np.array_equal(tensor.data, np.array([1, 2, 3])))
+        self.assertTrue(tensor.requires_grad)
+
+        data = np.array([[[1, 2, 3]], [[4, 5, 6]]], dtype=np.float32)
+        tensor = Tensor(data, requires_grad=True)
+        tensor.squeeze(1)
+        self.assertTrue(np.array_equal(tensor.data, np.array([[1, 2, 3], [4, 5, 6]])))
+        self.assertTrue(tensor.requires_grad)
+
+        data = np.array([[1, 2], [3, 4]], dtype=np.float32)
+        tensor = Tensor(data)
+        with self.assertRaises(ValueError):
+            tensor.squeeze(0)
+
+    def test_unsqueeze(self):
+        """Test the unsqueeze method of Tensor."""
+        data = np.array([1, 2, 3], dtype=np.float32)
+        tensor = Tensor(data, requires_grad=True)
+        tensor.unsqueeze(0)
+        self.assertTrue(np.array_equal(tensor.data, np.array([[1, 2, 3]])))
+        self.assertTrue(tensor.requires_grad)
+
+        data = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        tensor = Tensor(data, requires_grad=True)
+        tensor.unsqueeze(1)
+        expected = np.array([[[1, 2, 3]], [[4, 5, 6]]])
+        self.assertTrue(np.array_equal(tensor.data, expected))
+        self.assertTrue(tensor.requires_grad)
+
+        tensor = Tensor(data, requires_grad=True)
+        tensor.unsqueeze(2)
+        expected = data[:, :, np.newaxis]  # shape (2,3,1)
+        self.assertTrue(np.array_equal(tensor.data, expected))
+        self.assertTrue(tensor.requires_grad)
+
+        tensor = Tensor(data)
+        with self.assertRaises(ValueError):
+            tensor.unsqueeze(3)
+
 
 if __name__ == "__main__":
     unittest.main()
