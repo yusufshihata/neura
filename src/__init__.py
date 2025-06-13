@@ -6,7 +6,7 @@ from . import utils
 from . import api
 
 __all__ = [
-    'Tensor',  # Directly expose Tensor class
+    'Tensor',
     'core',
     'nn',
     'cuda',

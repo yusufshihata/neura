@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from typing import Optional, Union, List
+from .init_strategies import InitStrategy, OneInit, ZeroInit, RandnInit
 
 
 class Tensor:
@@ -20,6 +21,23 @@ class Tensor:
         self.grad = grad
         self.ndim = self.data.ndim
         self.shape = self.data.shape
+
+    @classmethod
+    def from_strategy(cls, shape: tuple, strategy: InitStrategy, requires_grad: Optional[bool] = True, dtype: Optional[type] = np.float32) -> Tensor:
+        data = strategy.init(shape, dtype)
+        return cls(data, requires_grad, dtype=dtype)
+    
+    @classmethod
+    def ones(cls, shape: tuple, **kwargs) -> Tensor:
+        return cls.from_strategy(shape, OneInit(), **kwargs)
+
+    @classmethod
+    def zeros(cls, shape: tuple, **kwargs) -> Tensor:
+        return cls.from_strategy(shape, ZeroInit(), **kwargs)
+    
+    @classmethod
+    def randn(cls, shape: tuple, **kwargs) -> Tensor:
+        return cls.from_strategy(shape, RandnInit(), **kwargs)
 
     def __add__(self, other: Tensor) -> Tensor:
         new_data = self.data + other.data

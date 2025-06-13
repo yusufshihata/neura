@@ -1,4 +1,4 @@
-from .tensor import Tensor
+from .tensors.tensor import Tensor
 
 __all__ = [
     'Tensor'

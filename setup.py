@@ -7,7 +7,7 @@ setup(
     description='A deep learning library with Python and CUDA',
     packages=[
         'neura',
-        'neura.core',
+        'neura.core.tensors',
         'neura.core.ops',
         'neura.nn',
         'neura.cuda',
