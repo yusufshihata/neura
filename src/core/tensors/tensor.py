@@ -21,6 +21,7 @@ class Tensor:
         self.grad = grad
         self.ndim = self.data.ndim
         self.shape = self.data.shape
+        self.T = self.data.T
 
     @classmethod
     def from_strategy(cls, shape: tuple, strategy: InitStrategy, requires_grad: Optional[bool] = True, dtype: Optional[type] = np.float32) -> Tensor:
