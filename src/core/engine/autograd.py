@@ -6,7 +6,7 @@ class Node:
         self.data = data
         self.grad = 0
         self._backward = lambda: None
-        self._prev = set(_children)
+        self._children = set(_children)
         self._op = _op
     
     def __add__(self, other: Node) -> Node:
@@ -34,11 +34,10 @@ class Node:
         return out
     
     def __mul__(self, scalar: Node) -> Node:
-        out = Node(self.data * scalar, (self, scalar), '*')
+        out = Node(self.data * scalar, (self,), '*')
 
         def _backward():
             self.grad += scalar * out.grad
-            scalar.grad += self.data * out.grad
 
         out._backward = _backward
 
@@ -54,3 +53,21 @@ class Node:
         out._backward = _backward
 
         return out
+    
+    def backward(self):
+        graph = []
+        visited = set()
+        def build_graph(node):
+            visited.add(node)
+            for child in node._children:
+                build_graph(child)
+            graph.append(node)
+        build_graph(self)
+        self.grad = np.ones_like(self.data.shape)
+        for node in reversed(graph):
+            node._backward()
+    
+    def zero_grad(self):
+        self.grad = 0
+        for child in self._children:
+            child.zero_grad()
